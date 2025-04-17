@@ -3,6 +3,7 @@ package com.uttkarsh.SpringBoot.Security.services;
 
 import com.uttkarsh.SpringBoot.Security.dto.PostDTO;
 import com.uttkarsh.SpringBoot.Security.entities.PostEntity;
+import com.uttkarsh.SpringBoot.Security.exceptions.ResourceNotFoundException;
 import com.uttkarsh.SpringBoot.Security.repositories.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
