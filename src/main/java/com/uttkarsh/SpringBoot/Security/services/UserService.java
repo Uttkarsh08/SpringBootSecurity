@@ -42,4 +42,8 @@ public class UserService implements UserDetailsService {
         UserEntity savedUser = userRepository.save(toSave);
         return mapper.map(savedUser, UserDTO.class);
     }
+
+    public UserEntity findUserById(Long userId) {
+        return userRepository.findById(userId).orElseThrow(()-> new ResourceNotFoundException("User not Exist"));
+    }
 }
