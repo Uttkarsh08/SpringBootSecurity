@@ -12,9 +12,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -22,28 +22,33 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserService userService;
+    private final HandlerExceptionResolver handlerExceptionResolver;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        final String requestTokenHeader = request.getHeader("Authorization");
-        if(requestTokenHeader == null || !requestTokenHeader.startsWith("Bearer")){
+        try {
+            final String requestTokenHeader = request.getHeader("Authorization");
+            if (requestTokenHeader == null || !requestTokenHeader.startsWith("Bearer")) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            String token = requestTokenHeader.split("Bearer ")[1];
+            Long userId = jwtService.getUserIdWithJwtToken(token);
+
+            if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserEntity userEntity = userService.findUserById(userId);
+                UsernamePasswordAuthenticationToken authenticationToken =
+                        new UsernamePasswordAuthenticationToken(userEntity, null, null); //here userEntity is passed as the principal, so for any http request, when it is actually authenticated using this filter, we can access this userEntity anywhere using our SecurityContextHolder.
+
+                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            }
+
             filterChain.doFilter(request, response);
-            return;
+        } catch (Exception e) {
+            handlerExceptionResolver.resolveException(request, response, null, e);
         }
-
-        String token = requestTokenHeader.split("Bearer ")[1];
-        Long userId = jwtService.getUserIdWithJwtToken(token);
-
-        if(userId != null && SecurityContextHolder.getContext().getAuthentication() == null){
-            UserEntity userEntity = userService.findUserById(userId);
-            UsernamePasswordAuthenticationToken authenticationToken =
-                    new UsernamePasswordAuthenticationToken(userEntity, null, null); //here userEntity is passed as the principal, so for any http request, when it is actually authenticated using this filter, we can access this userEntity anywhere using our SecurityContextHolder.
-
-            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-        }
-
-        filterChain.doFilter(request, response);
 
     }
 }

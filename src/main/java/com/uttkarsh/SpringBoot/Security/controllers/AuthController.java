@@ -1,6 +1,7 @@
 package com.uttkarsh.SpringBoot.Security.controllers;
 
 
+import com.uttkarsh.SpringBoot.Security.advice.ApiResponse;
 import com.uttkarsh.SpringBoot.Security.dto.LoginDTO;
 import com.uttkarsh.SpringBoot.Security.dto.SignUpDTO;
 import com.uttkarsh.SpringBoot.Security.dto.UserDTO;
@@ -28,9 +29,9 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> logIn(@RequestBody LoginDTO loginDTO){
+    public ResponseEntity<ApiResponse<String>> logIn(@RequestBody LoginDTO loginDTO){
         String token = authService.logIn(loginDTO);
-        return ResponseEntity.ok(token);
+        return ResponseEntity.ok(new ApiResponse<>(token));
     }
 
 }
