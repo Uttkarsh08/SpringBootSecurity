@@ -15,7 +15,7 @@ class SecurityApplicationTests {
 	@Test
 	void contextLoads() {
 		UserEntity userEntity = new UserEntity(2L, "ut@gmail.com", "pass", "Uttkarsh");
-		String token = jwtService.generateJwtToken(userEntity);
+		String token = jwtService.generateAccessToken(userEntity);
 		System.out.println(token);
 
 		long id = jwtService.getUserIdWithJwtToken(token);

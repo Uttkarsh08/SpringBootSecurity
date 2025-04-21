@@ -1,11 +1,11 @@
 package com.uttkarsh.SpringBoot.Security.services;
 
 import com.uttkarsh.SpringBoot.Security.dto.LoginDTO;
+import com.uttkarsh.SpringBoot.Security.dto.LoginResponseDTO;
 import com.uttkarsh.SpringBoot.Security.entities.UserEntity;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -16,20 +16,26 @@ public class AuthService {
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final UserService userService;
 
-    public String logIn(LoginDTO loginDTO) {
+    public LoginResponseDTO logIn(LoginDTO loginDTO) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getPassword())
         );
-        if(authentication.isAuthenticated()){
-            UserEntity userEntity = (UserEntity) authentication.getPrincipal();
+        UserEntity userEntity = (UserEntity) authentication.getPrincipal();
 
-            String token = jwtService.generateJwtToken(userEntity);
-            return token;
-        }else {
-            throw new BadCredentialsException("Wrong Username or Password");
-        }
+        String accessToken = jwtService.generateAccessToken(userEntity);
+        String refreshToken = jwtService.generateRefreshToken(userEntity);
 
+        return new LoginResponseDTO(userEntity.getId(), accessToken, refreshToken);
+    }
 
+    public LoginResponseDTO refreshToken(String refreshToken) {
+        Long userId = jwtService.getUserIdWithJwtToken(refreshToken);
+
+        UserEntity userEntity = userService.findUserById(userId);
+        String accessToken = jwtService.generateAccessToken(userEntity);
+
+        return new LoginResponseDTO(userEntity.getId(), accessToken, refreshToken);
     }
 }
