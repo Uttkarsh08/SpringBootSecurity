@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.security.core.userdetails.User;
 
 @Entity
 @Table(name = "posts")
@@ -19,5 +20,8 @@ public class PostEntity {
     private Long id;
     private String title;
     private String description;
+
+    @ManyToOne
+    private UserEntity author;
 
 }
