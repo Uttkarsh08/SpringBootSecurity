@@ -5,6 +5,7 @@ import com.uttkarsh.SpringBoot.Security.handlers.Oauth2Handler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -21,6 +22,9 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import static com.uttkarsh.SpringBoot.Security.entities.enums.Role.ADMIN;
+import static com.uttkarsh.SpringBoot.Security.entities.enums.Role.CREATOR;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -29,12 +33,17 @@ public class WebSecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final Oauth2Handler oauth2Handler;
 
+    private static final String[] publicRoutes = {
+            "/error", "/auth/**", "home.html"
+    };
+
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception{
         httpSecurity
                 .authorizeHttpRequests(auth->auth
-                        .requestMatchers("/posts", "/auth/**", "home.html").permitAll() //this whitelist to allow everyone to hit this route without authentication
-//                        .requestMatchers("/posts/**").hasAnyRole("ADMIN") //this allows only user with role as ADMIN to got to route -> posts/anything/anything
+                        .requestMatchers(publicRoutes).permitAll() //this whitelist to allow everyone to hit this route without authentication
+                        .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
+                        .requestMatchers(HttpMethod.POST,"/posts/**").hasAnyRole(ADMIN.name(), CREATOR.name()) //this allows only user with role as ADMIN or Creator to got to route -> posts/anything/anything(while post request only)
                         .anyRequest().authenticated())
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sessionConfig-> sessionConfig
@@ -44,7 +53,6 @@ public class WebSecurityConfig {
                         .failureUrl("/login?error=true")
                         .successHandler(oauth2Handler)
                 );
-//                .formLogin(Customizer.withDefaults());
 
         return httpSecurity.build();
     }

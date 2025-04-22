@@ -25,9 +25,9 @@ public class JwtService {
         return Jwts.builder()
                 .subject(userEntity.getId().toString())
                 .claim("email", userEntity.getEmail())
-                .claim("password", userEntity.getPassword())
+                .claim("roles", userEntity.getRoles().toString())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis()+1000*20))
+                .expiration(new Date(System.currentTimeMillis()+1000*20*60*60))
                 .signWith(getSecretKey())
                 .compact();
     }
@@ -35,7 +35,7 @@ public class JwtService {
         return Jwts.builder()
                 .subject(userEntity.getId().toString())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis()+1000*60))
+                .expiration(new Date(System.currentTimeMillis()+1000*60*60*60))
                 .signWith(getSecretKey())
                 .compact();
     }
