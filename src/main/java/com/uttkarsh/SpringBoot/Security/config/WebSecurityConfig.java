@@ -1,6 +1,7 @@
 package com.uttkarsh.SpringBoot.Security.config;
 
 import com.uttkarsh.SpringBoot.Security.filters.JwtAuthFilter;
+import com.uttkarsh.SpringBoot.Security.handlers.Oauth2Handler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,18 +27,23 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class WebSecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final Oauth2Handler oauth2Handler;
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception{
         httpSecurity
                 .authorizeHttpRequests(auth->auth
-                        .requestMatchers("/posts", "/auth/**").permitAll() //this whitelist to allow everyone to hit this route without authentication
+                        .requestMatchers("/posts", "/auth/**", "home.html").permitAll() //this whitelist to allow everyone to hit this route without authentication
 //                        .requestMatchers("/posts/**").hasAnyRole("ADMIN") //this allows only user with role as ADMIN to got to route -> posts/anything/anything
                         .anyRequest().authenticated())
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sessionConfig-> sessionConfig
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .oauth2Login(client-> client
+                        .failureUrl("/login?error=true")
+                        .successHandler(oauth2Handler)
+                );
 //                .formLogin(Customizer.withDefaults());
 
         return httpSecurity.build();
